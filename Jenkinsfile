@@ -5,7 +5,7 @@ pipeline {
         DB_ENGINE    = 'sqlite'
     }
     stages {
-        stage('build') {
+        stage('Build') {
             steps {
                 // sh 'python --version'
                 echo "Database engine is ${DB_ENGINE}"
@@ -20,7 +20,7 @@ pipeline {
                 sh 'echo "Success!"; exit 0'
             }
         }
-        stage('build') {
+        stage('Publish') {
             steps {
                 // sh 'python --version'
                 echo "Database engine is ${DB_ENGINE}"
