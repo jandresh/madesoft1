@@ -1,15 +1,14 @@
 pipeline {
     agent any
     environment {
-        DISABLE_AUTH = 'true'
-        DB_ENGINE    = 'sqlite'
+        // DISABLE_AUTH = 'true'
+        // DB_ENGINE    = 'sqlite'
     }
     stages {
         stage('Build') {
             steps {
                 // sh 'python --version'
-                echo "Database engine is ${DB_ENGINE}"
-                echo "DISABLE_AUTH is ${DISABLE_AUTH}"
+                echo "Deployment test environment"
                 build 'testEnvironment'
             }
         }
@@ -23,9 +22,10 @@ pipeline {
         stage('Publish') {
             steps {
                 // sh 'python --version'
-                echo "Database engine is ${DB_ENGINE}"
-                echo "DISABLE_AUTH is ${DISABLE_AUTH}"
+                // echo "Database engine is ${DB_ENGINE}"
+                // echo "DISABLE_AUTH is ${DISABLE_AUTH}"
                 build 'containerPublish'
+                echo "Continer push to DockerHub"
             }
         }
         stage('Deploy') {
