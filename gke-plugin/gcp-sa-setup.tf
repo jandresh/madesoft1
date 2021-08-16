@@ -4,7 +4,7 @@ variable project {
 }
 
 variable region {
-  type        = strin"
+  type        = string
   description = "The GCP region."
 }
 
