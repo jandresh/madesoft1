@@ -1,7 +1,10 @@
 pipeline {
     agent any
     environment {
-        DB_ENGINE    = 'sqlite'
+        PROJECT_ID = 'madesoft-320002'
+        CLUSTER_NAME = 'madesoft-app'
+        LOCATION = 'us-east1-b'
+        CREDENTIALS_ID = 'madesoft1-320002'
     }
     stages {
         stage('Build') {
@@ -14,8 +17,6 @@ pipeline {
         stage('Publish') {
             steps {
                 // sh 'python --version'
-                // echo "Database engine is ${DB_ENGINE}"
-                // echo "DISABLE_AUTH is ${DISABLE_AUTH}"
                 build 'containerPublish'
                 echo "Continer push to DockerHub"
             }
@@ -39,6 +40,54 @@ pipeline {
                     sh 'chmod 777 health-check.sh'
                     sh './health-check.sh'
                 }
+            }
+        }
+        stage('Deploy to GKE') {
+            steps{
+                step([
+                $class: 'KubernetesEngineBuilder',
+                projectId: env.PROJECT_ID,
+                clusterName: env.CLUSTER_NAME,
+                location: env.LOCATION,
+                manifestPattern: 'kompose/blog-deployment.yaml',
+                credentialsId: env.CREDENTIALS_ID,
+                verifyDeployments: true])
+                
+                step([
+                $class: 'KubernetesEngineBuilder',
+                projectId: env.PROJECT_ID,
+                clusterName: env.CLUSTER_NAME,
+                location: env.LOCATION,
+                manifestPattern: 'kompose/blog-service.yaml',
+                credentialsId: env.CREDENTIALS_ID,
+                verifyDeployments: true])
+
+                step([
+                $class: 'KubernetesEngineBuilder',
+                projectId: env.PROJECT_ID,
+                clusterName: env.CLUSTER_NAME,
+                location: env.LOCATION,
+                manifestPattern: 'kompose/mongo-claim0-persistentvolumeclaim.yaml',
+                credentialsId: env.CREDENTIALS_ID,
+                verifyDeployments: true])
+
+                step([
+                $class: 'KubernetesEngineBuilder',
+                projectId: env.PROJECT_ID,
+                clusterName: env.CLUSTER_NAME,
+                location: env.LOCATION,
+                manifestPattern: 'kompose/mongo-deployment.yaml',
+                credentialsId: env.CREDENTIALS_ID,
+                verifyDeployments: true])
+
+                step([
+                $class: 'KubernetesEngineBuilder',
+                projectId: env.PROJECT_ID,
+                clusterName: env.CLUSTER_NAME,
+                location: env.LOCATION,
+                manifestPattern: 'kompose/mongo-service.yaml',
+                credentialsId: env.CREDENTIALS_ID,
+                verifyDeployments: true])
             }
         }
     }
