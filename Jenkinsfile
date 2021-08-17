@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        PROJECT_ID = 'madesoft-320002'
+        PROJECT_ID = 'madesoft1-320002'
         CLUSTER_NAME = 'madesoft-app'
         LOCATION = 'us-east1-b'
         CREDENTIALS_ID = 'madesoft1-320002'
