@@ -49,10 +49,11 @@ pipeline {
                 projectId: env.PROJECT_ID,
                 clusterName: env.CLUSTER_NAME,
                 location: env.LOCATION,
-                manifestPattern: 'kompose/blog-deployment.yaml',
+                manifestPattern: 'kube',
+                // manifestPattern: 'kompose/blog-deployment.yaml',
                 credentialsId: env.CREDENTIALS_ID,
                 verifyDeployments: true])
-                
+                /* 
                 step([
                 $class: 'KubernetesEngineBuilder',
                 projectId: env.PROJECT_ID,
@@ -87,7 +88,7 @@ pipeline {
                 location: env.LOCATION,
                 manifestPattern: 'kompose/mongo-service.yaml',
                 credentialsId: env.CREDENTIALS_ID,
-                verifyDeployments: true])
+                verifyDeployments: true]) */
             }
         }
     }
