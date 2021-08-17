@@ -11,13 +11,6 @@ pipeline {
                 build 'testEnvironment'
             }
         }
-        stage('Test') {
-            steps {
-                // 
-                // sh 'python --version'
-                sh 'echo "Success!"; exit 0'
-            }
-        }
         stage('Publish') {
             steps {
                 // sh 'python --version'
@@ -25,6 +18,14 @@ pipeline {
                 // echo "DISABLE_AUTH is ${DISABLE_AUTH}"
                 build 'containerPublish'
                 echo "Continer push to DockerHub"
+            }
+        }
+        stage('Test') {
+            steps {
+                // 
+                // sh 'python --version'
+                build 'testEnvironment2'
+                sh 'echo "Success!"; exit 0'
             }
         }
         stage('Deploy') {
