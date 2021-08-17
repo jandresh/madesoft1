@@ -1,7 +1,6 @@
 /journal
 /diagnostic
 /db
-mongo-claim0-persistentvolumeclaim.yaml
 storage.bson
 /diagnostic.data
 Wired*
