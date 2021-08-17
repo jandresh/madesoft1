@@ -52,7 +52,7 @@ pipeline {
                 manifestPattern: 'kube',
                 // manifestPattern: 'kompose/blog-deployment.yaml',
                 credentialsId: env.CREDENTIALS_ID,
-                verifyDeployments: true])
+                verifyDeployments: false])
                 /* 
                 step([
                 $class: 'KubernetesEngineBuilder',
