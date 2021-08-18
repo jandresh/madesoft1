@@ -1,4 +1,4 @@
-# Use
+# Use docker-compose
 
 - Install docker and docker-compose
 - Clone repository
