@@ -30,6 +30,9 @@ spec:
           imagePullPolicy: Always
           ports:
             - containerPort: 3000
-          resources: {}
+          resources:
+            limits:
+              memory: "500Mi"
+              cpu: "100m"
       restartPolicy: Always
 status: {}
