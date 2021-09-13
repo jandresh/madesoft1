@@ -41,21 +41,21 @@ spec:
 }
   }
     stages {
-        stage('Build') {
+        stage('Build&Test app') {
             steps {
                 // sh 'python --version'
                 echo "Deployment test environment"
-                build 'testEnvironment'
+                build 'testEnvironment1'
             }
         }
-        stage('Publish') {
+        stage('Container Publish') {
             steps {
                 // sh 'python --version'
                 build 'containerPublish'
                 echo "Continer push to DockerHub"
             }
         }
-        stage('Test') {
+        stage('Test App form dockerHub') {
             steps {
                 // 
                 // sh 'python --version'
@@ -63,19 +63,39 @@ spec:
                 sh 'echo "Success!"; exit 0'
             }
         }
-        stage('Deploy') {
-            steps {
-                retry(3) {
-                    sh 'chmod 777 deploy.sh'
-                    sh './deploy.sh'
-                }
+        // stage('Deploy') {
+        //     steps {
+        //         retry(3) {
+        //             sh 'chmod 777 deploy.sh'
+        //             sh './deploy.sh'
+        //         }
 
-                timeout(time: 3, unit: 'MINUTES') {
-                    sh 'chmod 777 health-check.sh'
-                    sh './health-check.sh'
+        //         timeout(time: 3, unit: 'MINUTES') {
+        //             sh 'chmod 777 health-check.sh'
+        //             sh './health-check.sh'
+        //         }
+        //     }
+        // }
+        stage('Deploy Developer') {
+            // Developer Branches
+            when {
+                not { branch 'master' }
+                not { branch 'canary' }
+            }
+            steps {
+                container('kubectl') {
+                    // Create namespace if it doesn't exist
+                    sh("kubectl get ns ${env.BRANCH_NAME} || kubectl create ns ${env.BRANCH_NAME}")
+                    // Don't use public load balancing for development branches
+                    // sh("sed -i.bak 's#LoadBalancer#ClusterIP#' ./kube/services/blog-service.yaml")
+                    sh("sed -i.bak 's#jandresh/blog:latest#${IMAGE_TAG}#' ./kube/dev/*.yaml")
+                    step([$class: 'KubernetesEngineBuilder', namespace: "${env.BRANCH_NAME}", projectId: env.PROJECT, clusterName: env.CLUSTER, zone: env.CLUSTER_ZONE, manifestPattern: 'kube/services', credentialsId: env.JENKINS_CRED, verifyDeployments: false])
+                    step([$class: 'KubernetesEngineBuilder', namespace: "${env.BRANCH_NAME}", projectId: env.PROJECT, clusterName: env.CLUSTER, zone: env.CLUSTER_ZONE, manifestPattern: 'kube/dev', credentialsId: env.JENKINS_CRED, verifyDeployments: true])
+                    echo 'To access your environment run `kubectl proxy`'
+                    echo "Then access your service via http://localhost:8001/api/v1/proxy/namespaces/${env.BRANCH_NAME}/services/${FE_SVC_NAME}:80/"
                 }
             }
-        }
+        }  
         stage('Deploy Canary') {
             // Canary branch
             when { branch 'canary' }
@@ -100,27 +120,7 @@ spec:
                     sh("echo http://`kubectl --namespace=production get service/${FE_SVC_NAME} -o jsonpath='{.status.loadBalancer.ingress[0].ip}'` > ${FE_SVC_NAME}")
                 }
             }
-        }
-        stage('Deploy Test') {
-            // Developer Branches
-            when {
-                not { branch 'master' }
-                not { branch 'canary' }
-            }
-            steps {
-                container('kubectl') {
-                    // Create namespace if it doesn't exist
-                    sh("kubectl get ns ${env.BRANCH_NAME} || kubectl create ns ${env.BRANCH_NAME}")
-                    // Don't use public load balancing for development branches
-                    // sh("sed -i.bak 's#LoadBalancer#ClusterIP#' ./kube/services/blog-service.yaml")
-                    sh("sed -i.bak 's#jandresh/blog:latest#${IMAGE_TAG}#' ./kube/dev/*.yaml")
-                    step([$class: 'KubernetesEngineBuilder', namespace: "${env.BRANCH_NAME}", projectId: env.PROJECT, clusterName: env.CLUSTER, zone: env.CLUSTER_ZONE, manifestPattern: 'kube/services', credentialsId: env.JENKINS_CRED, verifyDeployments: false])
-                    step([$class: 'KubernetesEngineBuilder', namespace: "${env.BRANCH_NAME}", projectId: env.PROJECT, clusterName: env.CLUSTER, zone: env.CLUSTER_ZONE, manifestPattern: 'kube/dev', credentialsId: env.JENKINS_CRED, verifyDeployments: true])
-                    echo 'To access your environment run `kubectl proxy`'
-                    echo "Then access your service via http://localhost:8001/api/v1/proxy/namespaces/${env.BRANCH_NAME}/services/${FE_SVC_NAME}:80/"
-                }
-            }
-        }       
+        }    
     }
     post {
         always {
