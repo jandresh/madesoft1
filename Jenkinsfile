@@ -6,7 +6,7 @@ pipeline {
         // CREDENTIALS_ID = 'madesoft1-320002'        
         PROJECT = "madesoft1-320002"
         APP_NAME = "madesoft-app"
-        FE_SVC_NAME = "${APP_NAME}-frontend"
+        FE_SVC_NAME = "blog"
         CLUSTER = "jenkins-cd"
         CLUSTER_ZONE = "us-east1-d"
         // IMAGE_TAG = "gcr.io/${PROJECT}/${APP_NAME}:${env.BRANCH_NAME}.${env.BUILD_NUMBER}"
@@ -80,55 +80,6 @@ spec:
                 }
             }
         }
-        // stage('Deploy to GKE') {
-        //     steps{
-        //         step([
-        //         $class: 'KubernetesEngineBuilder',
-        //         projectId: env.PROJECT_ID,
-        //         clusterName: env.CLUSTER_NAME,
-        //         location: env.LOCATION,
-        //         manifestPattern: 'kube',
-        //         // manifestPattern: 'kompose/blog-deployment.yaml',
-        //         credentialsId: env.CREDENTIALS_ID,
-        //         verifyDeployments: false])
-        //         /* 
-        //         step([
-        //         $class: 'KubernetesEngineBuilder',
-        //         projectId: env.PROJECT_ID,
-        //         clusterName: env.CLUSTER_NAME,
-        //         location: env.LOCATION,
-        //         manifestPattern: 'kompose/blog-service.yaml',
-        //         credentialsId: env.CREDENTIALS_ID,
-        //         verifyDeployments: true])
-
-        //         step([
-        //         $class: 'KubernetesEngineBuilder',
-        //         projectId: env.PROJECT_ID,
-        //         clusterName: env.CLUSTER_NAME,
-        //         location: env.LOCATION,
-        //         manifestPattern: 'kompose/mongo-claim0-persistentvolumeclaim.yaml',
-        //         credentialsId: env.CREDENTIALS_ID,
-        //         verifyDeployments: true])
-
-        //         step([
-        //         $class: 'KubernetesEngineBuilder',
-        //         projectId: env.PROJECT_ID,
-        //         clusterName: env.CLUSTER_NAME,
-        //         location: env.LOCATION,
-        //         manifestPattern: 'kompose/mongo-deployment.yaml',
-        //         credentialsId: env.CREDENTIALS_ID,
-        //         verifyDeployments: true])
-
-        //         step([
-        //         $class: 'KubernetesEngineBuilder',
-        //         projectId: env.PROJECT_ID,
-        //         clusterName: env.CLUSTER_NAME,
-        //         location: env.LOCATION,
-        //         manifestPattern: 'kompose/mongo-service.yaml',
-        //         credentialsId: env.CREDENTIALS_ID,
-        //         verifyDeployments: true]) */
-        //     }
-        // }
         stage('Deploy Canary') {
             // Canary branch
             when { branch 'canary' }
