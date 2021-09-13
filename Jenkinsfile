@@ -1,10 +1,17 @@
 pipeline {
     agent any
     environment {
-        PROJECT_ID = 'madesoft1-320002'
-        CLUSTER_NAME = 'madesoft-app'
-        LOCATION = 'us-east1-b'
-        CREDENTIALS_ID = 'madesoft1-320002'
+        // PROJECT_ID = 'madesoft1-320002'
+        // CLUSTER_NAME = 'madesoft-app'
+        // LOCATION = 'us-east1-b'
+        // CREDENTIALS_ID = 'madesoft1-320002'        
+        PROJECT = "madesoft1-320002"
+        APP_NAME = "madesoft-app"
+        FE_SVC_NAME = "${APP_NAME}-frontend"
+        CLUSTER = "jenkins-cd"
+        CLUSTER_ZONE = "us-east1-d"
+        // IMAGE_TAG = "gcr.io/${PROJECT}/${APP_NAME}:${env.BRANCH_NAME}.${env.BUILD_NUMBER}"
+        JENKINS_CRED = "${PROJECT}"
     }
     stages {
         stage('Build') {
@@ -42,55 +49,96 @@ pipeline {
                 }
             }
         }
-        stage('Deploy to GKE') {
-            steps{
-                step([
-                $class: 'KubernetesEngineBuilder',
-                projectId: env.PROJECT_ID,
-                clusterName: env.CLUSTER_NAME,
-                location: env.LOCATION,
-                manifestPattern: 'kube',
-                // manifestPattern: 'kompose/blog-deployment.yaml',
-                credentialsId: env.CREDENTIALS_ID,
-                verifyDeployments: false])
-                /* 
-                step([
-                $class: 'KubernetesEngineBuilder',
-                projectId: env.PROJECT_ID,
-                clusterName: env.CLUSTER_NAME,
-                location: env.LOCATION,
-                manifestPattern: 'kompose/blog-service.yaml',
-                credentialsId: env.CREDENTIALS_ID,
-                verifyDeployments: true])
+        // stage('Deploy to GKE') {
+        //     steps{
+        //         step([
+        //         $class: 'KubernetesEngineBuilder',
+        //         projectId: env.PROJECT_ID,
+        //         clusterName: env.CLUSTER_NAME,
+        //         location: env.LOCATION,
+        //         manifestPattern: 'kube',
+        //         // manifestPattern: 'kompose/blog-deployment.yaml',
+        //         credentialsId: env.CREDENTIALS_ID,
+        //         verifyDeployments: false])
+        //         /* 
+        //         step([
+        //         $class: 'KubernetesEngineBuilder',
+        //         projectId: env.PROJECT_ID,
+        //         clusterName: env.CLUSTER_NAME,
+        //         location: env.LOCATION,
+        //         manifestPattern: 'kompose/blog-service.yaml',
+        //         credentialsId: env.CREDENTIALS_ID,
+        //         verifyDeployments: true])
 
-                step([
-                $class: 'KubernetesEngineBuilder',
-                projectId: env.PROJECT_ID,
-                clusterName: env.CLUSTER_NAME,
-                location: env.LOCATION,
-                manifestPattern: 'kompose/mongo-claim0-persistentvolumeclaim.yaml',
-                credentialsId: env.CREDENTIALS_ID,
-                verifyDeployments: true])
+        //         step([
+        //         $class: 'KubernetesEngineBuilder',
+        //         projectId: env.PROJECT_ID,
+        //         clusterName: env.CLUSTER_NAME,
+        //         location: env.LOCATION,
+        //         manifestPattern: 'kompose/mongo-claim0-persistentvolumeclaim.yaml',
+        //         credentialsId: env.CREDENTIALS_ID,
+        //         verifyDeployments: true])
 
-                step([
-                $class: 'KubernetesEngineBuilder',
-                projectId: env.PROJECT_ID,
-                clusterName: env.CLUSTER_NAME,
-                location: env.LOCATION,
-                manifestPattern: 'kompose/mongo-deployment.yaml',
-                credentialsId: env.CREDENTIALS_ID,
-                verifyDeployments: true])
+        //         step([
+        //         $class: 'KubernetesEngineBuilder',
+        //         projectId: env.PROJECT_ID,
+        //         clusterName: env.CLUSTER_NAME,
+        //         location: env.LOCATION,
+        //         manifestPattern: 'kompose/mongo-deployment.yaml',
+        //         credentialsId: env.CREDENTIALS_ID,
+        //         verifyDeployments: true])
 
-                step([
-                $class: 'KubernetesEngineBuilder',
-                projectId: env.PROJECT_ID,
-                clusterName: env.CLUSTER_NAME,
-                location: env.LOCATION,
-                manifestPattern: 'kompose/mongo-service.yaml',
-                credentialsId: env.CREDENTIALS_ID,
-                verifyDeployments: true]) */
+        //         step([
+        //         $class: 'KubernetesEngineBuilder',
+        //         projectId: env.PROJECT_ID,
+        //         clusterName: env.CLUSTER_NAME,
+        //         location: env.LOCATION,
+        //         manifestPattern: 'kompose/mongo-service.yaml',
+        //         credentialsId: env.CREDENTIALS_ID,
+        //         verifyDeployments: true]) */
+        //     }
+        // }
+        stage('Deploy Canary') {
+            // Canary branch
+            when { branch 'canary' }
+            steps {
+                container('kubectl') {
+                    step([$class: 'KubernetesEngineBuilder', namespace:'production', projectId: env.PROJECT, clusterName: env.CLUSTER, zone: env.CLUSTER_ZONE, manifestPattern: 'kube/services', credentialsId: env.JENKINS_CRED, verifyDeployments: false])
+                    step([$class: 'KubernetesEngineBuilder', namespace:'production', projectId: env.PROJECT, clusterName: env.CLUSTER, zone: env.CLUSTER_ZONE, manifestPattern: 'kube/canary', credentialsId: env.JENKINS_CRED, verifyDeployments: true])
+                    sh("echo http://`kubectl --namespace=production get service/${FE_SVC_NAME} -o jsonpath='{.status.loadBalancer.ingress[0].ip}'` > ${FE_SVC_NAME}")
+                }
             }
         }
+        stage('Deploy Production') {
+            // Production branch
+            when { branch 'master' }
+            steps{
+                container('kubectl') {
+                    step([$class: 'KubernetesEngineBuilder', namespace:'production', projectId: env.PROJECT, clusterName: env.CLUSTER, zone: env.CLUSTER_ZONE, manifestPattern: 'kube/services', credentialsId: env.JENKINS_CRED, verifyDeployments: false])
+                    step([$class: 'KubernetesEngineBuilder', namespace:'production', projectId: env.PROJECT, clusterName: env.CLUSTER, zone: env.CLUSTER_ZONE, manifestPattern: 'kube/production', credentialsId: env.JENKINS_CRED, verifyDeployments: true])
+                    sh("echo http://`kubectl --namespace=production get service/${FE_SVC_NAME} -o jsonpath='{.status.loadBalancer.ingress[0].ip}'` > ${FE_SVC_NAME}")
+                }
+            }
+        }
+        stage('Deploy Test') {
+            // Developer Branches
+            when {
+                not { branch 'master' }
+                not { branch 'canary' }
+            }
+            steps {
+                container('kubectl') {
+                    // Create namespace if it doesn't exist
+                    sh("kubectl get ns ${env.BRANCH_NAME} || kubectl create ns ${env.BRANCH_NAME}")
+                    // Don't use public load balancing for development branches
+                    sh("sed -i.bak 's#LoadBalancer#ClusterIP#' ./kube/services/blog-service.yaml")
+                    step([$class: 'KubernetesEngineBuilder', namespace: "${env.BRANCH_NAME}", projectId: env.PROJECT, clusterName: env.CLUSTER, zone: env.CLUSTER_ZONE, manifestPattern: 'kube/services', credentialsId: env.JENKINS_CRED, verifyDeployments: false])
+                    step([$class: 'KubernetesEngineBuilder', namespace: "${env.BRANCH_NAME}", projectId: env.PROJECT, clusterName: env.CLUSTER, zone: env.CLUSTER_ZONE, manifestPattern: 'kube/dev', credentialsId: env.JENKINS_CRED, verifyDeployments: true])
+                    echo 'To access your environment run `kubectl proxy`'
+                    echo "Then access your service via http://localhost:8001/api/v1/proxy/namespaces/${env.BRANCH_NAME}/services/${FE_SVC_NAME}:80/"
+                }
+            }
+        }       
     }
     post {
         always {

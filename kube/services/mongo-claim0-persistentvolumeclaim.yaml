@@ -5,7 +5,7 @@ metadata:
   labels:
     io.kompose.service: mongo-claim0
   name: mongo-claim0
-  namespace: kube-system
+  # namespace: kube-system
 spec:
   accessModes:
     - ReadWriteOnce

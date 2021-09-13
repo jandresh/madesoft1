@@ -8,7 +8,7 @@ metadata:
   labels:
     io.kompose.service: mongo
   name: mongo
-  namespace: kube-system
+  # namespace: kube-system
 spec:
   replicas: 1
   selector:

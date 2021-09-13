@@ -6,15 +6,16 @@ metadata:
     kompose.version: 1.22.0 (955b78124)
   creationTimestamp: null
   labels:
-    io.kompose.service: blog
-  name: blog
-  namespace: kube-system
+    io.kompose.service: mongo
+  name: mongo
+  # namespace: kube-system
 spec:
   replicas: 1
   selector:
     matchLabels:
-      io.kompose.service: blog
-  strategy: {}
+      io.kompose.service: mongo
+  strategy:
+    type: Recreate
   template:
     metadata:
       annotations:
@@ -22,13 +23,20 @@ spec:
         kompose.version: 1.22.0 (955b78124)
       creationTimestamp: null
       labels:
-        io.kompose.service: blog
+        io.kompose.service: mongo
     spec:
       containers:
-        - image: jandresh/blog:latest
-          name: blog
+        - image: mongo
+          name: mongo
           ports:
-            - containerPort: 3000
+            - containerPort: 27017
           resources: {}
+          volumeMounts:
+            - mountPath: /data/db
+              name: mongo-claim0
       restartPolicy: Always
+      volumes:
+        - name: mongo-claim0
+          persistentVolumeClaim:
+            claimName: mongo-claim0
 status: {}
