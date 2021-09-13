@@ -14,7 +14,7 @@ pipeline {
     }
     agent {
     kubernetes {
-      label 'sample-app'
+      label 'madesoft-app'
       defaultContainer 'jnlp'
       yaml """
 apiVersion: v1

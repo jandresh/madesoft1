@@ -10,11 +10,12 @@ metadata:
   name: blog
   # namespace: kube-system
 spec:
+  type: LoadBalancer
   ports:
-    - name: "3000"
+    - name: "http"
       port: 3000
       targetPort: 3000
   selector:
     io.kompose.service: blog
-status:
-  loadBalancer: {}
+# status:
+#   loadBalancer: {}
