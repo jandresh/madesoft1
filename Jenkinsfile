@@ -1,15 +1,10 @@
 pipeline {
     environment {
-        // PROJECT_ID = 'madesoft1-320002'
-        // CLUSTER_NAME = 'madesoft-app'
-        // LOCATION = 'us-east1-b'
-        // CREDENTIALS_ID = 'madesoft1-320002'        
         PROJECT = "madesoft1-320002"
         APP_NAME = "madesoft-app"
         FE_SVC_NAME = "blog"
         CLUSTER = "jenkins-cd"
         CLUSTER_ZONE = "us-east1-d"
-        // IMAGE_TAG = "gcr.io/${PROJECT}/${APP_NAME}:${env.BRANCH_NAME}.${env.BUILD_NUMBER}"
         JENKINS_CRED = "${PROJECT}"
     }
     agent {
@@ -96,6 +91,7 @@ spec:
             when { branch 'master' }
             steps{
                 container('kubectl') {
+                    sh("echo build ${env.GIT_COMMIT}")
                     step([$class: 'KubernetesEngineBuilder', namespace:'production', projectId: env.PROJECT, clusterName: env.CLUSTER, zone: env.CLUSTER_ZONE, manifestPattern: 'kube/services', credentialsId: env.JENKINS_CRED, verifyDeployments: false])
                     step([$class: 'KubernetesEngineBuilder', namespace:'production', projectId: env.PROJECT, clusterName: env.CLUSTER, zone: env.CLUSTER_ZONE, manifestPattern: 'kube/production', credentialsId: env.JENKINS_CRED, verifyDeployments: true])
                     sh("echo http://`kubectl --namespace=production get service/${FE_SVC_NAME} -o jsonpath='{.status.loadBalancer.ingress[0].ip}'` > ${FE_SVC_NAME}")
