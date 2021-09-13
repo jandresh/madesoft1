@@ -26,6 +26,7 @@ spec:
     spec:
       containers:
         - image: jandresh/blog:latest
+          imagePullPolicy: Always
           name: blog
           ports:
             - containerPort: 3000
