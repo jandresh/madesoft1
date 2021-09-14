@@ -49,9 +49,14 @@ spec:
             }
         }
         stage('Container Publish') {
+            agent { 
+                label 'ubuntu-2104​' 
+                }
             steps {
                 // sh 'python --version'
-                build 'containerPublish'
+                // build 'containerPublish'
+                sh 'chmod 777 container-publish.sh'
+                sh './container-publish.sh'
                 echo "Continer push to DockerHub"
             }
         }
