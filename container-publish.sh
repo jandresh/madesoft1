@@ -9,4 +9,3 @@ sudo docker build -t jandresh/blog:$GIT_COMMIT .
 sudo docker push jandresh/blog:$GIT_COMMIT
 sudo docker build -t jandresh/blog:latest .
 sudo docker push jandresh/blog:latest
-# cb64422a-f28c-4ee7-b717-f605e309a1b2

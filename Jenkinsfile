@@ -8,38 +8,7 @@ pipeline {
         JENKINS_CRED = "${PROJECT}"
         IMAGE_TAG = "jandresh/blog:${env.GIT_COMMIT}"
     }
-    agent {
-    kubernetes {
-      label 'madesoft-app'
-      defaultContainer 'jnlp'
-      yaml """
-apiVersion: v1
-kind: Pod
-metadata:
-labels:
-  component: ci
-spec:
-  # Use service account that can deploy to all namespaces
-  serviceAccountName: cd-jenkins
-  containers:
-  - name: golang
-    image: golang:1.10
-    command:
-    - cat
-    tty: true
-  - name: gcloud
-    image: gcr.io/cloud-builders/gcloud
-    command:
-    - cat
-    tty: true
-  - name: kubectl
-    image: gcr.io/cloud-builders/kubectl
-    command:
-    - cat
-    tty: true
-"""
-}
-  }
+    agent none
     stages {
         stage('Build&Test app') {
             steps {
@@ -87,6 +56,28 @@ spec:
                 not { branch 'master' }
                 not { branch 'canary' }
             }
+agent {
+    kubernetes {
+      label 'madesoft-app'
+      defaultContainer 'jnlp'
+      yaml """
+apiVersion: v1
+kind: Pod
+metadata:
+labels:
+  component: ci
+spec:
+  # Use service account that can deploy to all namespaces
+  serviceAccountName: cd-jenkins
+  containers:
+  - name: kubectl
+    image: gcr.io/cloud-builders/kubectl
+    command:
+    - cat
+    tty: true
+"""
+}
+  }
             steps {
                 container('kubectl') {
                     // Create namespace if it doesn't exist
@@ -97,7 +88,8 @@ spec:
                     step([$class: 'KubernetesEngineBuilder', namespace: "${env.BRANCH_NAME}", projectId: env.PROJECT, clusterName: env.CLUSTER, zone: env.CLUSTER_ZONE, manifestPattern: 'kube/services', credentialsId: env.JENKINS_CRED, verifyDeployments: false])
                     step([$class: 'KubernetesEngineBuilder', namespace: "${env.BRANCH_NAME}", projectId: env.PROJECT, clusterName: env.CLUSTER, zone: env.CLUSTER_ZONE, manifestPattern: 'kube/dev', credentialsId: env.JENKINS_CRED, verifyDeployments: true])
                     echo 'To access your environment run `kubectl proxy`'
-                    echo "Then access your service via http://localhost:8001/api/v1/proxy/namespaces/${env.BRANCH_NAME}/services/${FE_SVC_NAME}:80/"
+                    // echo "Then access your service via http://localhost:8001/api/v1/proxy/namespaces/${env.BRANCH_NAME}/services/${FE_SVC_NAME}:80/"
+                    sh("echo http://`kubectl --namespace=${env.BRANCH_NAME} get service/${FE_SVC_NAME} -o jsonpath='{.status.loadBalancer.ingress[0].ip}'` > ${FE_SVC_NAME}:3000")
                 }
             }
         }  
@@ -109,7 +101,7 @@ spec:
                     sh("sed -i.bak 's#jandresh/blog:latest#${IMAGE_TAG}#' ./kube/canary/*.yaml")
                     step([$class: 'KubernetesEngineBuilder', namespace:'production', projectId: env.PROJECT, clusterName: env.CLUSTER, zone: env.CLUSTER_ZONE, manifestPattern: 'kube/services', credentialsId: env.JENKINS_CRED, verifyDeployments: false])
                     step([$class: 'KubernetesEngineBuilder', namespace:'production', projectId: env.PROJECT, clusterName: env.CLUSTER, zone: env.CLUSTER_ZONE, manifestPattern: 'kube/canary', credentialsId: env.JENKINS_CRED, verifyDeployments: true])
-                    sh("echo http://`kubectl --namespace=production get service/${FE_SVC_NAME} -o jsonpath='{.status.loadBalancer.ingress[0].ip}'` > ${FE_SVC_NAME}")
+                    sh("echo http://`kubectl --namespace=production get service/${FE_SVC_NAME} -o jsonpath='{.status.loadBalancer.ingress[0].ip}'` > ${FE_SVC_NAME}:3000")
                 }
             }
         }
