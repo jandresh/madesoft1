@@ -67,7 +67,7 @@ pipeline {
                     sh("kubectl get ns ${env.BRANCH_NAME} || kubectl create ns ${env.BRANCH_NAME}")
                     // Don't use public load balancing for development branches
                     // sh("sed -i.bak 's#LoadBalancer#ClusterIP#' ./kube/services/blog-service.yaml")
-                    sh("sed -i.bak 's#jandresh/blog:latest#${IMAGE_TAG}#' ./kube/dev/*.yaml")
+                    sh("sed -i.bak 's#jandresh/blog:latest#jandresh/blog:${IMAGE_TAG}#' ./kube/dev/*.yaml")
                     step([$class: 'KubernetesEngineBuilder', namespace: "${env.BRANCH_NAME}", projectId: env.PROJECT, clusterName: env.CLUSTER, zone: env.CLUSTER_ZONE, manifestPattern: 'kube/services', credentialsId: env.JENKINS_CRED, verifyDeployments: false])
                     step([$class: 'KubernetesEngineBuilder', namespace: "${env.BRANCH_NAME}", projectId: env.PROJECT, clusterName: env.CLUSTER, zone: env.CLUSTER_ZONE, manifestPattern: 'kube/dev', credentialsId: env.JENKINS_CRED, verifyDeployments: true])
                     echo 'To access your environment run `kubectl proxy`'
@@ -89,7 +89,7 @@ pipeline {
             steps {
                 container('kubectl') {
                     // sh("sed -i.bak 's#jandresh/blog:latest#${IMAGE_TAG}#' ./kube/canary/*.yaml")
-                    sh("sed -i.bak 's#jandresh/blog:latest#jandresh/blog:${GIT_COMMIT_HASH}#' ./kube/canary/*.yaml")
+                    sh("sed -i.bak 's#jandresh/blog:latest#jandresh/blog:${IMAGE_TAG}#' ./kube/canary/*.yaml")
                     step([$class: 'KubernetesEngineBuilder', namespace:'production', projectId: env.PROJECT, clusterName: env.CLUSTER, zone: env.CLUSTER_ZONE, manifestPattern: 'kube/services', credentialsId: env.JENKINS_CRED, verifyDeployments: false])
                     step([$class: 'KubernetesEngineBuilder', namespace:'production', projectId: env.PROJECT, clusterName: env.CLUSTER, zone: env.CLUSTER_ZONE, manifestPattern: 'kube/canary', credentialsId: env.JENKINS_CRED, verifyDeployments: true])
                     sh("echo http://`kubectl --namespace=production get service/${FE_SVC_NAME} -o jsonpath='{.status.loadBalancer.ingress[0].ip}'` > ${FE_SVC_NAME}:3000")
@@ -109,7 +109,7 @@ pipeline {
             steps{
                 container('kubectl') {
                     sh("echo build ${env.GIT_COMMIT}")
-                    sh("sed -i.bak 's#jandresh/blog:latest#${IMAGE_TAG}#' ./kube/production/*.yaml")
+                    sh("sed -i.bak 's#jandresh/blog:latest#jandresh/blog:${IMAGE_TAG}#' ./kube/production/*.yaml")
                     step([$class: 'KubernetesEngineBuilder', namespace:'production', projectId: env.PROJECT, clusterName: env.CLUSTER, zone: env.CLUSTER_ZONE, manifestPattern: 'kube/services', credentialsId: env.JENKINS_CRED, verifyDeployments: false])
                     step([$class: 'KubernetesEngineBuilder', namespace:'production', projectId: env.PROJECT, clusterName: env.CLUSTER, zone: env.CLUSTER_ZONE, manifestPattern: 'kube/production', credentialsId: env.JENKINS_CRED, verifyDeployments: true])
                     sh("echo http://`kubectl --namespace=production get service/${FE_SVC_NAME} -o jsonpath='{.status.loadBalancer.ingress[0].ip}'` > ${FE_SVC_NAME}:3000")
