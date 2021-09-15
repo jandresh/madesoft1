@@ -8,7 +8,7 @@ pipeline {
         JENKINS_CRED = "${PROJECT}"
         IMAGE_TAG = "jandresh/blog:${env.GIT_COMMIT}"
     }
-    agent none
+    agent any
     stages {
         // stage('Build&Test app') {
         //     steps {
