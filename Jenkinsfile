@@ -29,9 +29,10 @@ pipeline {
             steps {
                 echo "Container push to DockerHub"
                 sh 'chmod 777 container-publish.sh'
+                sh './container-publish.sh'
                 script {
-                    GIT_COMMIT_HASH=sh (
-                        script: './container-publish.sh',
+                    IMAGE_TAG=sh (
+                        script: echo '$GIT_COMMIT',
                         returnStdout: true
                     )
                 }             
