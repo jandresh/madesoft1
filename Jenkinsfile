@@ -10,13 +10,13 @@ pipeline {
     }
     agent none
     stages {
-        stage('Build&Test app') {
-            steps {
-                // sh 'python --version'
-                echo "Deployment test environment"
-                build 'testEnvironment1'
-            }
-        }
+        // stage('Build&Test app') {
+        //     steps {
+        //         // sh 'python --version'
+        //         echo "Deployment test environment"
+        //         build 'testEnvironment1'
+        //     }
+        // }
         stage('Container Publish') {
             agent { 
                 label 'ubuntu-2104​' 
@@ -29,14 +29,14 @@ pipeline {
                 echo "Continer push to DockerHub"
             }
         }
-        stage('Test App form dockerHub') {
-            steps {
-                // 
-                // sh 'python --version'
-                build 'testEnvironment2'
-                sh 'echo "Success!"; exit 0'
-            }
-        }
+        // stage('Test App form dockerHub') {
+        //     steps {
+        //         // 
+        //         // sh 'python --version'
+        //         build 'testEnvironment2'
+        //         sh 'echo "Success!"; exit 0'
+        //     }
+        // }
         // stage('Deploy') {
         //     steps {
         //         retry(3) {
