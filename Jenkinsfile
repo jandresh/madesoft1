@@ -19,8 +19,8 @@ pipeline {
         // }
         stage('Container Publish') {
             agent { 
-                label 'ubuntu-2104​' 
-                }
+                node { label 'ubuntu-2104​' }
+            }
             steps {
                 // sh 'python --version'
                 // build 'containerPublish'
