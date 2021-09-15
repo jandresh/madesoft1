@@ -32,7 +32,7 @@ pipeline {
                 sh './container-publish.sh'
                 script {
                     IMAGE_TAG=sh (
-                        script: echo '$GIT_COMMIT',
+                        script: 'echo $GIT_COMMIT',
                         returnStdout: true
                     )
                 }             
