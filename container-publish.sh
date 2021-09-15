@@ -10,3 +10,4 @@ sudo docker build -t jandresh/blog:$GIT_COMMIT .
 sudo docker push jandresh/blog:$GIT_COMMIT
 sudo docker build -t jandresh/blog:latest .
 sudo docker push jandresh/blog:latest
+echo $GIT_COMMIT
