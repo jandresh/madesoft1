@@ -16,7 +16,7 @@ pipeline {
             agent { 
                 node { label agentLabel as String }
             }
-            step
+            step{
                 echo "Deployment test environment from docker-compose.yml"
                 sh 'chmod 777 test-environment1.sh'
                 sh './test-environment1.sh'
@@ -29,8 +29,7 @@ pipeline {
             steps {
                 echo "Container push to DockerHub"
                 sh 'chmod 777 container-publish.sh'
-                sh './container-publish.sh'
-                
+                sh './container-publish.sh'                
             }
         }
         stage('Test App form dockerHub') {
