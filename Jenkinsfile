@@ -29,10 +29,12 @@ pipeline {
             steps {
                 echo "Container push to DockerHub"
                 sh 'chmod 777 container-publish.sh'
-                def GIT_COMMIT_HASH=sh (
-                    script: './container-publish.sh',
-                    returnStdout: true
-                )             
+                script {
+                    GIT_COMMIT_HASH=sh (
+                        script: './container-publish.sh',
+                        returnStdout: true
+                    )
+                }             
             }
         }
         stage('Test App form dockerHub') {
