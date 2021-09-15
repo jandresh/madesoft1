@@ -16,7 +16,7 @@ pipeline {
             agent { 
                 node { label agentLabel as String }
             }
-            step{
+            steps {
                 echo "Deployment test environment from docker-compose.yml"
                 sh 'chmod 777 test-environment1.sh'
                 sh './test-environment1.sh'
