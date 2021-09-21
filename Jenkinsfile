@@ -90,6 +90,8 @@ pipeline {
             steps {
                 container('kubectl') {
                     // sh("sed -i.bak 's#jandresh/blog:latest#${IMAGE_TAG}#' ./kube/canary/*.yaml")
+                    // Create namespace if it doesn't exist
+                    sh("kubectl get ns production || kubectl create ns production")
                     sh("sed -i.bak 's#jandresh/blog:latest#jandresh/blog:${IMAGE_TAG}#' ./kube/canary/*.yaml")
                     step([$class: 'KubernetesEngineBuilder', namespace:'production', projectId: env.PROJECT, clusterName: env.CLUSTER, zone: env.CLUSTER_ZONE, manifestPattern: 'kube/services', credentialsId: env.JENKINS_CRED, verifyDeployments: false])
                     step([$class: 'KubernetesEngineBuilder', namespace:'production', projectId: env.PROJECT, clusterName: env.CLUSTER, zone: env.CLUSTER_ZONE, manifestPattern: 'kube/canary', credentialsId: env.JENKINS_CRED, verifyDeployments: true])
@@ -110,9 +112,12 @@ pipeline {
             steps{
                 container('kubectl') {
                     sh("echo build ${env.GIT_COMMIT}")
+                    // Create namespace if it doesn't exist
+                    sh("kubectl get ns production || kubectl create ns production")
                     sh("sed -i.bak 's#jandresh/blog:latest#jandresh/blog:${IMAGE_TAG}#' ./kube/production/*.yaml")
                     step([$class: 'KubernetesEngineBuilder', namespace:'production', projectId: env.PROJECT, clusterName: env.CLUSTER, zone: env.CLUSTER_ZONE, manifestPattern: 'kube/services', credentialsId: env.JENKINS_CRED, verifyDeployments: false])
                     step([$class: 'KubernetesEngineBuilder', namespace:'production', projectId: env.PROJECT, clusterName: env.CLUSTER, zone: env.CLUSTER_ZONE, manifestPattern: 'kube/production', credentialsId: env.JENKINS_CRED, verifyDeployments: true])
+                    sh("kubectl --namespace=production scale deployment blog --replicas=4")
                     sh("echo http://`kubectl --namespace=production get service/${FE_SVC_NAME} -o jsonpath='{.status.loadBalancer.ingress[0].ip}'` > ${FE_SVC_NAME}:3000")
                 }
             }
